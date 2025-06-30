@@ -8,138 +8,141 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
+  
+  var todoItems: Results<Item>?
+  let realm = try! Realm()
+  
+  var selectedCategory: Category? {
+    didSet {
+      loadItems()
+    }
+  }
+  
+  override func viewDidLoad() {
+    super.viewDidLoad()
     
-    var todoItems: Results<Item>?
-    let realm = try! Realm()
+    print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+  }
+  
+  //MARK: - TableView Datasource Methods
+  
+  override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    return todoItems?.count ?? 1
+  }
+  
+  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     
-    var selectedCategory: Category? {
-        didSet {
-            loadItems()
+    let cell = super.tableView(tableView, cellForRowAt: indexPath)
+    
+    if let item = todoItems?[indexPath.row] {
+      
+      cell.textLabel?.text = item.title
+      cell.accessoryType = item.done ? .checkmark : .none
+    } else {
+      cell.textLabel?.text = "No Items Added"
+    }
+    
+    return cell
+  }
+  
+  //MARK: - TableView Delegates Methods
+  
+  override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    
+    if let item = todoItems?[indexPath.row] {
+      do {
+        try realm.write {
+          item.done = !item.done
         }
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+      } catch {
+        print("Error saving done status: \(error)")
+      }
     }
     
-    //MARK: - TableView Datasource Methods
+    tableView.reloadData()
+    tableView.deselectRow(at: indexPath, animated: true)
+  }
+  
+  //MARK: - Data Manipulation Methods
+  
+  func loadItems() {
     
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todoItems?.count ?? 1
-    }
+    todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: false)
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-        
-        if let item = todoItems?[indexPath.row] {
-            
-            cell.textLabel?.text = item.title
-            
-            cell.accessoryType = item.done ? .checkmark : .none
-        } else {
-            cell.textLabel?.text = "No Items Added"
+    tableView.reloadData()
+  }
+  
+  override func updateModel(at indexPath: IndexPath) {
+    if let itemForDeletion = todoItems?[indexPath.row] {
+      do {
+        try realm.write {
+          realm.delete(itemForDeletion)
         }
-        
-        return cell
+      } catch {
+        print("Error saving new item: \(error)")
+      }
     }
+  }
+  
+  //MARK: - Add New Items
+  
+  @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
     
-    //MARK: - TableView Delegates Methods
+    var textField = UITextField()
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-        if let item = todoItems?[indexPath.row] {
-            do {
-                try realm.write {
-                    
-                    
-                    
-                    //Update
-                    item.done = !item.done
-                    
-                    //Delete
-//                    realm.delete(item)
-                }
-            } catch {
-                print("Error saving done status: \(error)")
-            }
+    let alert = UIAlertController(title: "Add New Todoey Item", message: nil, preferredStyle: .alert)
+    
+    //Create
+    let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+      //what will happen if user clicked the Add button
+      
+      if let currentCategory = self.selectedCategory {
+        do {
+          try self.realm.write {
+            let newItem = Item()
+            newItem.title = textField.text!
+            newItem.dateCreated = Date()
+            currentCategory.items.append(newItem)
+          }
+        } catch {
+          print("Error saving new item: \(error)")
         }
-        
-        tableView.reloadData()
-        tableView.deselectRow(at: indexPath, animated: true)
+      }
+      
+      self.tableView.reloadData()
     }
     
-    //MARK: - Add New Items
-    
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        
-        var textField = UITextField()
-        
-        let alert = UIAlertController(title: "Add New Todoey Item", message: nil, preferredStyle: .alert)
-        
-        //Create
-        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            //what will happen if user clicked the Add button
-            
-            if let currentCategory = self.selectedCategory {
-                do {
-                    try self.realm.write {
-                        let newItem = Item()
-                        newItem.title = textField.text!
-                        newItem.dateCreated = Date()
-                        currentCategory.items.append(newItem)
-                    }
-                } catch {
-                    print("Error saving new item: \(error)")
-                }
-            }
-            
-            self.tableView.reloadData()
-        }
-        
-        alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Create New Item"
-            textField = alertTextField
-        }
-        
-        alert.addAction(action)
-        
-        present(alert, animated: true, completion: nil)
+    alert.addTextField { (alertTextField) in
+      alertTextField.placeholder = "Create New Item"
+      textField = alertTextField
     }
     
-    //MARK: - Model Manipulation Methods
+    alert.addAction(action)
     
-    //Read
-    func loadItems() {
-        
-        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: false)
-        
-        tableView.reloadData()
-    }
+    present(alert, animated: true, completion: nil)
+  }
 }
 
 //MARK: - Search Bar Methods
 
 extension TodoListViewController: UISearchBarDelegate {
+  
+  func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
     
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        
-        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
-        
-        tableView.reloadData()
+    todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
     
+    tableView.reloadData()
+    
+  }
+  
+  func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+    if searchBar.text?.count == 0 {
+      loadItems()
+      
+      DispatchQueue.main.async {
+        searchBar.resignFirstResponder()
+      }
     }
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchBar.text?.count == 0 {
-            loadItems()
-            
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
-            }
-        }
-    }
+  }
 }

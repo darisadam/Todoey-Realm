@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AE7A18322E1226900088FEC1 /* SwipeCellKit in Frameworks */ = {isa = PBXBuildFile; productRef = AE7A18312E1226900088FEC1 /* SwipeCellKit */; };
 		AE9BF2652D1D82090059A977 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = AE9BF2642D1D82090059A977 /* RealmSwift */; };
 /* End PBXBuildFile section */
 
@@ -40,6 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE7A18322E1226900088FEC1 /* SwipeCellKit in Frameworks */,
 				AE9BF2652D1D82090059A977 /* RealmSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -84,6 +86,7 @@
 			name = Todoey;
 			packageProductDependencies = (
 				AE9BF2642D1D82090059A977 /* RealmSwift */,
+				AE7A18312E1226900088FEC1 /* SwipeCellKit */,
 			);
 			productName = Todoey;
 			productReference = AE6F67FC2CBCC0ED0056F42C /* Todoey.app */;
@@ -115,6 +118,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				AE9BF2612D1D82090059A977 /* XCRemoteSwiftPackageReference "realm-swift" */,
+				AE7A18302E1226900088FEC1 /* XCRemoteSwiftPackageReference "SwipeCellKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AE6F67FD2CBCC0ED0056F42C /* Products */;
@@ -350,6 +354,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		AE7A18302E1226900088FEC1 /* XCRemoteSwiftPackageReference "SwipeCellKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwipeCellKit/SwipeCellKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.7.1;
+			};
+		};
 		AE9BF2612D1D82090059A977 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/realm/realm-swift";
@@ -361,6 +373,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		AE7A18312E1226900088FEC1 /* SwipeCellKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AE7A18302E1226900088FEC1 /* XCRemoteSwiftPackageReference "SwipeCellKit" */;
+			productName = SwipeCellKit;
+		};
 		AE9BF2642D1D82090059A977 /* RealmSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AE9BF2612D1D82090059A977 /* XCRemoteSwiftPackageReference "realm-swift" */;
