@@ -8,6 +8,7 @@
 import UIKit
 
 extension UIColor {
+  // MARK: - Random Color
   static func randomColor() -> UIColor {
     return UIColor(
       red: .random(in: 0...1),
@@ -84,5 +85,111 @@ extension UIColor {
     let color = randomColor()
     let hex = color.toHex()
     return (color: color, hex: hex)
+  }
+  
+  // MARK: - Darken Color
+  func darkened(by percentage: CGFloat) -> UIColor {
+    // Clamp percentage between 0.0 and 1.0
+    let clampedPercentage = max(0.0, min(1.0, percentage))
+    
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    
+    // Get RGBA components
+    getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    
+    // Calculate darkening factor (0% = no change, 100% = black)
+    let darkeningFactor = 1.0 - clampedPercentage
+    
+    return UIColor(
+      red: red * darkeningFactor,
+      green: green * darkeningFactor,
+      blue: blue * darkeningFactor,
+      alpha: alpha
+    )
+  }
+  
+  // MARK: - Lighten Color
+  func lightened(by percentage: CGFloat) -> UIColor {
+    // Clamp percentage between 0.0 and 1.0
+    let clampedPercentage = max(0.0, min(1.0, percentage))
+    
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    
+    // Get RGBA components
+    getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    
+    // Calculate lightening factor (0% = no change, 100% = white)
+    let lighteningFactor = clampedPercentage
+    
+    return UIColor(
+      red: red + (1.0 - red) * lighteningFactor,
+      green: green + (1.0 - green) * lighteningFactor,
+      blue: blue + (1.0 - blue) * lighteningFactor,
+      alpha: alpha
+    )
+  }
+  
+  // MARK: - Contrast Color
+  func contrastTo(_ color: UIColor, returnFlat: Bool = false) -> UIColor {
+    var selfRed: CGFloat = 0, selfGreen: CGFloat = 0, selfBlue: CGFloat = 0, selfAlpha: CGFloat = 0
+    var otherRed: CGFloat = 0, otherGreen: CGFloat = 0, otherBlue: CGFloat = 0, otherAlpha: CGFloat = 0
+    
+    // Get RGBA components for both colors
+    self.getRed(&selfRed, green: &selfGreen, blue: &selfBlue, alpha: &selfAlpha)
+    color.getRed(&otherRed, green: &otherGreen, blue: &otherBlue, alpha: &otherAlpha)
+    
+    if returnFlat {
+      // Return either pure black or white based on luminance
+      let selfLuminance = calculateLuminance(red: selfRed, green: selfGreen, blue: selfBlue)
+      let otherLuminance = calculateLuminance(red: otherRed, green: otherGreen, blue: otherBlue)
+      
+      // Calculate contrast ratios with black and white
+      let contrastWithBlack = (selfLuminance + 0.05) / (0.0 + 0.05)
+      let contrastWithWhite = (1.0 + 0.05) / (selfLuminance + 0.05)
+      
+      // Return black or white based on which provides better contrast
+      return contrastWithBlack > contrastWithWhite ? .black : .white
+    } else {
+      // Calculate inverted color for better visual contrast
+      let contrastRed = 1.0 - otherRed
+      let contrastGreen = 1.0 - otherGreen
+      let contrastBlue = 1.0 - otherBlue
+      
+      // Adjust for better readability
+      let adjustedRed = contrastRed < 0.5 ? contrastRed + 0.3 : contrastRed - 0.3
+      let adjustedGreen = contrastGreen < 0.5 ? contrastGreen + 0.3 : contrastGreen - 0.3
+      let adjustedBlue = contrastBlue < 0.5 ? contrastBlue + 0.3 : contrastBlue - 0.3
+      
+      return UIColor(
+        red: max(0.0, min(1.0, adjustedRed)),
+        green: max(0.0, min(1.0, adjustedGreen)),
+        blue: max(0.0, min(1.0, adjustedBlue)),
+        alpha: selfAlpha
+      )
+    }
+  }
+  
+  private func calculateLuminance(red: CGFloat, green: CGFloat, blue: CGFloat) -> CGFloat {
+    // Convert sRGB to linear RGB
+    func srgbToLinear(_ component: CGFloat) -> CGFloat {
+      if component <= 0.03928 {
+        return component / 12.92
+      } else {
+        return pow((component + 0.055) / 1.055, 2.4)
+      }
+    }
+    
+    let linearRed = srgbToLinear(red)
+    let linearGreen = srgbToLinear(green)
+    let linearBlue = srgbToLinear(blue)
+    
+    // Calculate relative luminance using ITU-R BT.709 coefficients
+    return 0.2126 * linearRed + 0.7152 * linearGreen + 0.0722 * linearBlue
   }
 }

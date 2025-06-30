@@ -38,6 +38,15 @@ class TodoListViewController: SwipeTableViewController {
     if let item = todoItems?[indexPath.row] {
       
       cell.textLabel?.text = item.title
+      
+      if let color = selectedCategory?.backgroundColor {
+        let darkenedPercentage = CGFloat(indexPath.row) / CGFloat(todoItems!.count)
+        let backgroundColor = UIColor(hex: color)?.darkened(by: darkenedPercentage)
+        
+        cell.backgroundColor = backgroundColor
+        cell.textLabel?.textColor = backgroundColor?.contrastTo(backgroundColor!, returnFlat: true)
+      }
+      
       cell.accessoryType = item.done ? .checkmark : .none
     } else {
       cell.textLabel?.text = "No Items Added"
